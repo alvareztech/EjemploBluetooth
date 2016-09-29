@@ -8,6 +8,7 @@ import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +36,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void seleccionarDispositivo(View view) {
         Intent intent = new Intent(this, DispositivosActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, 321);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 321 && resultCode == RESULT_OK) {
+            String direccion = data.getExtras().getString("direccion");
+
+            Toast.makeText(this, direccion, Toast.LENGTH_SHORT).show();
+        }
     }
 }

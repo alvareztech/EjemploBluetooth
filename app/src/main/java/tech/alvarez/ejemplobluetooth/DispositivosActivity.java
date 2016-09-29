@@ -1,5 +1,6 @@
 package tech.alvarez.ejemplobluetooth;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -14,6 +15,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 public class DispositivosActivity extends AppCompatActivity implements OnItemClickListener {
 
@@ -60,6 +62,7 @@ public class DispositivosActivity extends AppCompatActivity implements OnItemCli
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device != null) {
 
+                    Log.i("MIAPP", ">" + device.getName());
                     dispositivosAdapter.add(new Dispositivo(device.getName(), device.getAddress()));
 
                 } else {
@@ -69,6 +72,8 @@ public class DispositivosActivity extends AppCompatActivity implements OnItemCli
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
 
                 Log.i("MIAPP", "Se terminó de buscar");
+                Toast.makeText(DispositivosActivity.this, "Se terminó de buscar", Toast.LENGTH_SHORT).show();
+                
 
             }
         }
@@ -86,6 +91,8 @@ public class DispositivosActivity extends AppCompatActivity implements OnItemCli
     }
 
     public void buscar(View view) {
+        dispositivosAdapter.clear();
+
         if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
         }
@@ -94,6 +101,9 @@ public class DispositivosActivity extends AppCompatActivity implements OnItemCli
 
     @Override
     public void dispositivoOnClick(Dispositivo dispositivo) {
-
+        Intent intent = new Intent();
+        intent.putExtra("direccion", dispositivo.getDireccion());
+        setResult(Activity.RESULT_OK, intent);
+        finish();
     }
 }
