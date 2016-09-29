@@ -3,9 +3,11 @@ package tech.alvarez.ejemplobluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +25,16 @@ public class MainActivity extends AppCompatActivity {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         }
 
-        
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(intent, 123);
+        }
+
+
+    }
+
+    public void seleccionarDispositivo(View view) {
+        Intent intent = new Intent(this, DispositivosActivity.class);
+        startActivity(intent);
     }
 }
