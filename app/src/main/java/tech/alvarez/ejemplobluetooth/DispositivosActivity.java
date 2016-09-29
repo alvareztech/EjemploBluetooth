@@ -10,17 +10,30 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
-public class DispositivosActivity extends AppCompatActivity {
+public class DispositivosActivity extends AppCompatActivity implements OnItemClickListener {
 
     private BluetoothAdapter bluetoothAdapter;
+
+    private RecyclerView recyclerView;
+    private DispositivosAdapter dispositivosAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dispositivos);
+
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        dispositivosAdapter = new DispositivosAdapter(this);
+        recyclerView.setAdapter(dispositivosAdapter);
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -47,8 +60,8 @@ public class DispositivosActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device != null) {
 
-                    Log.i("MIAPP", device.getName());
-                    Log.i("MIAPP", device.getAddress());
+                    dispositivosAdapter.add(new Dispositivo(device.getName(), device.getAddress()));
+
                 } else {
                     Log.i("MIAPP", "Disp nulo");
                 }
@@ -77,5 +90,10 @@ public class DispositivosActivity extends AppCompatActivity {
             bluetoothAdapter.cancelDiscovery();
         }
         bluetoothAdapter.startDiscovery();
+    }
+
+    @Override
+    public void dispositivoOnClick(Dispositivo dispositivo) {
+
     }
 }
