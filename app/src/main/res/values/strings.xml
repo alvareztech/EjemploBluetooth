@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">EjemploBluetooth</string>
     <string name="seleccionar_dispositivo">Seleccionar dispositivo</string>
+    <string name="buscar">Buscar</string>
 </resources>

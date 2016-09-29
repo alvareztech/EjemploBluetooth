@@ -8,9 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 
 public class DispositivosActivity extends AppCompatActivity {
 
@@ -35,10 +36,7 @@ public class DispositivosActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         registerReceiver(receiver, intentFilter);
 
-        if (bluetoothAdapter.isDiscovering()) {
-            bluetoothAdapter.cancelDiscovery();
-        }
-        bluetoothAdapter.startDiscovery();
+
     }
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -47,9 +45,13 @@ public class DispositivosActivity extends AppCompatActivity {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if (device != null) {
 
-                Log.i("MIAPP", device.getName());
-                Log.i("MIAPP", device.getAddress());
+                    Log.i("MIAPP", device.getName());
+                    Log.i("MIAPP", device.getAddress());
+                } else {
+                    Log.i("MIAPP", "Disp nulo");
+                }
 
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
 
@@ -68,5 +70,12 @@ public class DispositivosActivity extends AppCompatActivity {
         if (bluetoothAdapter != null) {
             bluetoothAdapter.cancelDiscovery();
         }
+    }
+
+    public void buscar(View view) {
+        if (bluetoothAdapter.isDiscovering()) {
+            bluetoothAdapter.cancelDiscovery();
+        }
+        bluetoothAdapter.startDiscovery();
     }
 }
