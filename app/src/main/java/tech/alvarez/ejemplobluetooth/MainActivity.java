@@ -14,7 +14,11 @@ import android.support.v4.os.AsyncTaskCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +27,10 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BluetoothAdapter bluetoothAdapter;
+    private EditText mensajeEditText;
+    private TextView mensajesTextView;
 
+    private BluetoothAdapter bluetoothAdapter;
 
     private ConectarTask conectarTask;
     private AceptarConexionTask aceptarConexionTask;
@@ -34,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mensajeEditText = (EditText) findViewById(R.id.mensajeEditText);
+        mensajesTextView = (TextView) findViewById(R.id.mensajesTextView);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -47,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intent, 123);
         }
 
+        aceptarConexionTask = new AceptarConexionTask();
+        AsyncTaskCompat.executeParallel(aceptarConexionTask);
 
     }
 
@@ -63,7 +74,25 @@ public class MainActivity extends AppCompatActivity {
             String direccion = data.getExtras().getString("direccion");
 
             Toast.makeText(this, direccion, Toast.LENGTH_SHORT).show();
+
+            conectarDispositivo(direccion);
         }
+    }
+
+    private void conectarDispositivo(String direccion) {
+
+        BluetoothDevice dispositivo = bluetoothAdapter.getRemoteDevice(direccion);
+
+        conectarTask = new ConectarTask(dispositivo);
+        AsyncTaskCompat.executeParallel(conectarTask);
+    }
+
+    public void enviarMensaje(View view) {
+
+        String mensaje = mensajeEditText.getText().toString();
+
+        conectadosTask.enviar(mensaje);
+
     }
 
     public class AceptarConexionTask extends AsyncTask<Void, String, BluetoothSocket> {
@@ -199,6 +228,8 @@ public class MainActivity extends AppCompatActivity {
 
             String mensaje = values[0];
             // mensaje listo para mostrar
+
+            mensajesTextView.append(mensaje + "\n");
         }
 
         @Override
