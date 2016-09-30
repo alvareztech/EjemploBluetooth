@@ -1,18 +1,34 @@
 package tech.alvarez.ejemplobluetooth;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.os.AsyncTaskCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter bluetoothAdapter;
+
+
+    private ConectarTask conectarTask;
+    private AceptarConexionTask aceptarConexionTask;
+    private ConectadosTask conectadosTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,4 +65,160 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, direccion, Toast.LENGTH_SHORT).show();
         }
     }
+
+    public class AceptarConexionTask extends AsyncTask<Void, String, BluetoothSocket> {
+
+        private final BluetoothServerSocket serverSocket;
+
+        public AceptarConexionTask() {
+            BluetoothServerSocket tmp = null;
+            try {
+                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Servidor",
+                        UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66"));
+            } catch (IOException e) {
+            }
+            serverSocket = tmp;
+        }
+
+        @Override
+        protected BluetoothSocket doInBackground(Void... params) {
+            BluetoothSocket socket = null;
+            while (true) {
+                Log.i("MIAPP", ".");
+                try {
+                    socket = serverSocket.accept();
+                } catch (IOException e) {
+                    break;
+                }
+                if (socket != null) {
+                    return socket;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(BluetoothSocket bluetoothSocket) {
+            super.onPostExecute(bluetoothSocket);
+            Log.i("MIAPP", "AceptarConexionTask onPostExecute");
+
+            if (bluetoothSocket != null) {
+                conectadosTask = new ConectadosTask(bluetoothSocket);
+                AsyncTaskCompat.executeParallel(conectadosTask);
+            }
+
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public class ConectarTask extends AsyncTask<Void, String, Boolean> {
+
+        private final BluetoothSocket bluetoothSocket;
+        private final BluetoothDevice bluetoothDevice;
+
+        public ConectarTask(BluetoothDevice bluetoothDevice) {
+            BluetoothSocket tmp = null;
+            this.bluetoothDevice = bluetoothDevice;
+            try {
+                tmp = bluetoothDevice.createRfcommSocketToServiceRecord(
+                        UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66"));
+            } catch (IOException e) {
+            }
+            bluetoothSocket = tmp;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            bluetoothAdapter.cancelDiscovery();
+            try {
+                bluetoothSocket.connect();
+            } catch (IOException connectException) {
+                try {
+                    bluetoothSocket.close();
+                } catch (IOException closeException) {
+                }
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean) {
+                conectadosTask = new ConectadosTask(bluetoothSocket);
+                AsyncTaskCompat.executeParallel(conectadosTask);
+            }
+        }
+    }
+
+
+    public class ConectadosTask extends AsyncTask<Void, String, Void> {
+
+        private final BluetoothSocket bluetoothSocket;
+        private final InputStream inputStream;
+        private final OutputStream outputStream;
+
+        public ConectadosTask(BluetoothSocket bluetoothSocket) {
+            this.bluetoothSocket = bluetoothSocket;
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            try {
+                tmpIn = bluetoothSocket.getInputStream();
+                tmpOut = bluetoothSocket.getOutputStream();
+            } catch (IOException e) {
+            }
+            inputStream = tmpIn;
+            outputStream = tmpOut;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            byte[] buffer = new byte[1024];
+            int bytes;
+            while (true) {
+                try {
+                    bytes = inputStream.read(buffer);
+                    String mensaje = new String(buffer).substring(0, bytes);
+                    publishProgress(mensaje);
+                } catch (IOException e) {
+                    break;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+
+            String mensaje = values[0];
+            // mensaje listo para mostrar
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            try {
+                bluetoothSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // mensaje listo para enviar
+        public void enviar(String mensaje) {
+            try {
+                outputStream.write(mensaje.getBytes());
+            } catch (IOException e) {
+            }
+        }
+    }
+
 }
