@@ -18,8 +18,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -90,8 +88,15 @@ public class MainActivity extends AppCompatActivity {
     public void enviarMensaje(View view) {
 
         String mensaje = mensajeEditText.getText().toString();
+        mensajeEditText.setText("");
+        mensajesTextView.append("Yo: " + mensaje + "\n");
 
-        conectadosTask.enviar(mensaje);
+        if (conectadosTask != null && conectadosTask.getStatus() == AsyncTask.Status.RUNNING) {
+            conectadosTask.enviar(mensaje);
+        } else {
+            Log.e("MIAPP", "Error al enviar, no conectados");
+        }
+
 
     }
 
@@ -229,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
             String mensaje = values[0];
             // mensaje listo para mostrar
 
-            mensajesTextView.append(mensaje + "\n");
+            mensajesTextView.append("El: "  + mensaje + "\n");
         }
 
         @Override
